@@ -1,5 +1,9 @@
 # Compose (macOS version)
 
+This brings up a small Jenkins Pipeline DevKit using Docker-Compose on macOS using Docker-Desktop or Linux with the Docker CE installed.
+
+This will NOT work on Windows as Unix sockets is not supported on Windows.
+
 ## General Instructions
 
 
@@ -20,7 +24,6 @@ I typically choose the recommend plugins and go from there.
 ### Step 2: Create Jobs
 
 Create new item, and chose something like tasks or pipelines.
-
 
 ## Tips
 
@@ -52,3 +55,16 @@ freeze_plugins() {
 # get list of plugins and save to plugins.txt
 freeze_plugins testuser testuser > plugins.txt
 ```
+
+## Notes
+
+### Deprecation Notice on DockerHub
+
+This underlying image `jenkinsci/blueocean` is supposedly deprecated in favor of `jenkins/jenkins`, but the later will not work with this project or all of the wonderful BlueOcean tutorials.  
+
+This is because `docker` is not supported inside the image `jenkins/jenkins`.
+
+* [GitHub `blueocean-plugin`](https://github.com/jenkinsci/blueocean-plugin) source code for `jenkinsci/blueocean` docker image
+* [Blue Ocean Docs/Tutorials](https://jenkins.io/doc/book/blueocean/)
+* [DockerHub `jenkinsci`](https://hub.docker.com/u/jenkinsci) organization
+* [`jenkins/jenkins`](https://hub.docker.com/r/jenkins/jenkins) Docker Image
