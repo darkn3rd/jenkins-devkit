@@ -1,0 +1,13 @@
+docker:
+  prereqs:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+  package: docker-ce
+  repo:
+    humanname: Docker CE
+    url_base: https://download.docker.com/linux/ubuntu
+    key_url: https://download.docker.com/linux/ubuntu/gpg
+    file: /etc/apt/sources.list.d/docker.list
+    name: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ grains['oscodename'] |lower }} stable

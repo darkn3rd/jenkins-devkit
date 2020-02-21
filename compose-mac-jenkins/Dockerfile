@@ -1,7 +1,7 @@
 FROM jenkins/jenkins:lts
 
-# Install Docker
 USER root
+####### INSTALL DOCKER CLI
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
@@ -18,14 +18,13 @@ RUN set -eux; \
     containerd.io; \
   rm -rf /var/lib/apt/lists/*
 
-# Install Jenkins Plugins
 USER jenkins
+####### INSTALL PLUGINS
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
-# install plugins list
 RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
-# remove initial wizard
-RUN echo 2.0 > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state
-
-# docker-ce \
-# docker-ce-cli \
-# containerd.io; \
+####### DISABLE SETUP WIZARD
+RUN echo $JENKINS_VERSION > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state; \
+  echo $JENKINS_VERSION > /usr/share/jenkins/ref/jenkins.install.InstallUtil.lastExecVersion
+####### CONFIGURE JENKINS AND PLUGINS
+ENV CASC_JENKINS_CONFIG /config/jenkins.yaml
+	COPY jenkins.yaml $CASC_JENKINS_CONFIG
