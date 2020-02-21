@@ -1,0 +1,14 @@
+version: "2"
+services:
+  jenkins:
+    build: .
+    user: root
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+      - "50000:50000"
+    volumes:
+      - ./jenkins_data:/var/jenkins_home
+      - ./home:/home
+      - /var/run/docker.sock:/var/run/docker.sock
+    container_name: blueocean-automated

@@ -1,11 +1,10 @@
-# Compose (macOS version)
+# Jenkins DevKit with BlueOcean (macOS/Linux version w/o automation)
 
-This brings up a small Jenkins Pipeline DevKit using Docker-Compose on macOS using Docker-Desktop or Linux with the Docker CE installed.
+This brings up a local Jenkins dev environ for experimenting with automation with Jenkins.  Automation can include scripts, jobs, pipelines, and configuration on the Jenkins platform.
 
-This will NOT work on Windows as Unix sockets is not supported on Windows.
+This particular setup does not include any automation, so the steps are applied manually.  This uses the [`jenkinsci/blueocean`](https://hub.docker.com/r/jenkinsci/blueocean), which reguarly updated from [blueocean project](https://github.com/jenkinsci/blueocean-plugin) despite any misinformation about deprecation.
 
 ## General Instructions
-
 
 ### Step 1: Create environment
 
@@ -15,11 +14,17 @@ docker-compose up -d
 pbcopy < ./jenkins_data/secrets/initialAdminPassword
 ```
 
-### Step 2: Initial Setup
+### Step 2: Select Install Suggested Plugins
+
+A wizard has options, in this select the `Install Suggested Plugins` to keep thins simple.
+
+### Step 3: Create a User
 
 For *local* dev environments, I typically do `testuser` for user and password.
 
-I typically choose the recommend plugins and go from there.
+### Step 4: Instance configuration
+
+The defaults of localhost:8080 is fine for our purposes.
 
 ### Step 2: Create Jobs
 
@@ -29,7 +34,7 @@ Create new item, and chose something like tasks or pipelines.
 
 ### Extracting List of Plugins
 
-If your user name and password are `testuser`, you can do this:
+You can use the function below to get the list of plugins.
 
 ```bash
 # function to get list of plugins
@@ -53,16 +58,15 @@ freeze_plugins() {
 }
 
 # get list of plugins and save to plugins.txt
-freeze_plugins testuser testuser > plugins.txt
+JENKINS_USER='admin'
+JENKINS_PSWD=$(cat /jenkins_data/secrets/initialAdminPassword)
+freeze_plugins admin $(cat /jenkins_data/secrets/initialAdminPassword) | sort > plugins.txt
+
+# list plugins w/o versions (use latest)
+cat plugins.txt | cut -d: -f1 > plugins_without_verions.txt
 ```
 
-## Notes
-
-### Deprecation Notice on DockerHub
-
-This underlying image `jenkinsci/blueocean` is supposedly deprecated in favor of `jenkins/jenkins`, but the later will not work with this project or all of the wonderful BlueOcean tutorials.  
-
-This is because `docker` is not supported inside the image `jenkins/jenkins`.
+## Links
 
 * [GitHub `blueocean-plugin`](https://github.com/jenkinsci/blueocean-plugin) source code for `jenkinsci/blueocean` docker image
 * [Blue Ocean Docs/Tutorials](https://jenkins.io/doc/book/blueocean/)
