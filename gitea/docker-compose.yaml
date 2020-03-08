@@ -1,0 +1,75 @@
+version: "2"
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: build.jenkins.Dockerfile
+    user: root
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      # SEED JOBS with Jenkins CasC
+      - ./jobs.yaml:/var/jenkins_home/casc_configs/jobs.yaml
+      - ./jobdsl:/var/jenkins_home/casc_configs/jobdsl/
+      # GITEA SUPPORT
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
+      - ./scripts/gitea_user_repos.sh:/usr/local/bin/gitea_user_repos.sh
+      - ./scripts/jenkins_seed_gitea.sh:/usr/local/bin/jenkins_seed_gitea.sh
+    depends_on:
+      - gitea
+    # command:
+    #   - /usr/local/bin/jenkins_seed_gitea.sh
+    #   # - /sbin/tini
+    #   # - --
+    #   # - /usr/local/bin/jenkins.sh
+    container_name: jenkins-devkit
+  gitea:
+    image: gitea/gitea:latest
+    environment:
+      USER_GID: ${USER_GID}
+      USER_UID: ${USER_UID}
+      DB_TYPE: mysql
+      DB_HOST: db:3306
+      DB_NAME: gitea
+      DB_USER: gitea
+      DB_PASSWD: gitea
+      SECRET_KEY: PCNNFSOuxRrblfbXVY3uMXykGt389gjQBgWZwa3PryspmPeaR1ojGv0XpaKoFSmT
+    volumes:
+      - ./gitea:/data
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
+      - ./scripts/gitea_accounts.sh:/usr/local/bin/gitea_accounts.sh
+      - ./scripts/gitea_wait_accounts.sh:/usr/local/bin/gitea_wait_accounts.sh
+    ports:
+      - "3000:3000"
+      - "22:22"
+    depends_on:
+      - db
+    command:
+      - /usr/local/bin/wait-for-it.sh
+      - db:3306
+      - --strict
+      - --timeout=180
+      - --
+      - /usr/local/bin/gitea_wait_accounts.sh
+      - /bin/s6-svscan
+      - /etc/s6
+    restart: always
+  db:
+    image: mariadb:10
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: gitea
+      MYSQL_DATABASE: gitea
+      MYSQL_USER: gitea
+      MYSQL_PASSWORD: gitea
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  jenkins_data:
+  mysql:
+  harbor-registry_data:
+    driver: local

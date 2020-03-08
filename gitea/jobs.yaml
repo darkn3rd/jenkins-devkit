@@ -1,0 +1,5 @@
+jobs:
+  - script: >
+      folder('testjobs')
+  - file: /var/jenkins_home/casc_configs/jobdsl/hello_flask.groovy
+  - file: /var/jenkins_home/casc_configs/jobdsl/hello_sinatra.groovy
