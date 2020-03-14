@@ -14,8 +14,8 @@ services:
       - jenkins_data:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       # SEED JOBS with Jenkins CasC
-      - ./jobs.yaml:/var/jenkins_home/casc_configs/jobs.yaml
-      - ./jobdsl:/var/jenkins_home/casc_configs/jobdsl/
+      - ./scripts/jenkins/jobs.yaml:/var/jenkins_home/casc_configs/jobs.yaml
+      - ./scripts/jenkins/jobdsl:/var/jenkins_home/casc_configs/jobdsl/
       # GITEA SUPPORT
       - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
       - ./scripts/gitea_user_repos.sh:/usr/local/bin/gitea_user_repos.sh
