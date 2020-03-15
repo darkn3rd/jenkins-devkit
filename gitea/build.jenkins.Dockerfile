@@ -1,7 +1,7 @@
 FROM jenkins/jenkins:lts
 
 USER root
-####### INSTALL DOCKER CLI
+####### INSTALL DOCKER CLI and TOOLS (jq, sudo, jcli)
 RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
@@ -14,10 +14,15 @@ RUN set -eux; \
      "deb [arch=amd64] https://download.docker.com/linux/debian \
      $(lsb_release -cs) \
      stable"; \
+  add-apt-repository \
+     "deb https://dl.bintray.com/jenkins-zh/deb \
+     wheezy \
+     main"; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
     docker-ce-cli \
     containerd.io; \
+  apt-get install -y --no-install-recommends --allow-unauthenticated jcli; \
   rm -rf /var/lib/apt/lists/*; \
   echo "jenkins ALL=(root) NOPASSWD:/bin/chgrp jenkins /var/run/docker.sock" > /etc/sudoers.d/jenkins
 
