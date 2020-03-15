@@ -15,8 +15,14 @@ COMPOSE_ENV
 ## Startup 
 
 ```bash
-docker-compoose build
+docker-compose build
 docker-compose up -d
+```
+
+## Seed Repositories on Gitea
+
+```bash
+docker exec -t ci-devkit-jenkins gitea_user_repos.sh
 ```
 
 ## Clean 
@@ -29,7 +35,10 @@ docker-compose rm --force
 # Remove Images
 docker rmi ci-devkit/dond --force
 
-# Remove Resources
-docker volume ls --quiet --filter name=${PWD}_ | xargs docker volume rm
+# Remove Volumes
+docker volume ls --quiet --filter name=${PWD##*/}_ | xargs docker volume rm
+rm -rf ./gitea
+
+# Remove Associated Networks
 docker network ls --filter name=compose -q | xargs docker network rm
 ```

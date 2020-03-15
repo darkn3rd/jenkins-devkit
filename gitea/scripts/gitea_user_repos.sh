@@ -7,86 +7,104 @@
 # - Public git repos of webmf-ruby-sinatra and webmf-python-flask
 
 # Variables used in script
-GITEA_HOST=${1:-"localhost"}
-GITEA_USER=${2:-"testuser"}
-SSH_KEY_PATH=${3:-"$HOME/.ssh/id_rsa.pub"}
-REPOS=(
-  https://github.com/darkn3rd/webmf-ruby-sinatra
-  https://github.com/darkn3rd/webmf-python-flask
+SSH_KEY_PATH=${1:-"$HOME/.ssh/id_rsa.pub"}
+GITEA_HOST=${2:-"gitea"}
+GITEA_USER=${3:-"jenkins"}
+GITEA_PSWD=$GITEA_USER
+GITEA_TEMP=/tmp/gitea_stage
+
+# Repositories and Descriptions used
+declare -A REPOSITORIES=( 
+  [sinatra-example]=https://github.com/darkn3rd/webmf-ruby-sinatra
+  [flask-example]=https://github.com/darkn3rd/webmf-python-flask
 )
 
-echo "DEBUG: GITEA_HOST=$GITEA_HOST"
-echo "DEBUG: GITEA_USER=$GITEA_USER"
-echo "DEBUG: SSH_KEY_PATH=$SSH_KEY_PATH"
+declare -A DESCRIPTIONS=( 
+  [sinatra-example]="Sinatra CI Example"
+  [flask-example]="Flask CI Example"
+)
 
+main() {
+  mkdir -p $GITEA_TEMP
+  GITEA_USER_TOKEN=$(create_token)
+  # save token in case needed later
+  echo $GITEA_USER_TOKEN > $GITEA_TEMP/token
 
-###### GENERATE USER TOKEN ###### 
-GITEA_USER_TOKEN=$(curl --silent \
-   --user testuser:testuser \
+  # with token and temp directory create repositories
+  if [[ -n "$GITEA_USER_TOKEN" && -d "$GITEA_TEMP" ]]; then
+    create_ssh_key
+    # create and populate repositories
+    for GITEA_REPO in "${!REPOSITORIES[@]}"; do
+      if create_repo $GITEA_REPO "${DESCRIPTIONS[$GITEA_REPO]}"; then
+        populate_repository ${REPOSITORIES[$GITEA_REPO]} $GITEA_REPO
+      fi
+    done
+  fi
+
+}
+
+create_token() {
+  curl --silent \
+   --user $GITEA_USER:$GITEA_PSWD \
    --request POST "http://$GITEA_HOST:3000/api/v1/users/$GITEA_USER/tokens" \
    --header "accept: application/json" \
    --header "Content-Type: application/json" \
    --data "{ \"name\": \"$GITEA_USER\"}" | jq -r '.sha1'
-)
+}
 
-###### GENERATE SSH PUB KEY ######
-cat <<-KEY > key.json
+create_ssh_key() {
+  cat <<-KEY > $GITEA_TEMP/key.json
 {
   "read_only": false,
   "title": "$(cat $SSH_KEY_PATH | awk '{print $NF}')",
-  "key": "$(cat $SSH_KEY_PATH/.ssh/id_rsa.pub)"
+  "key": "$(cat $SSH_KEY_PATH)"
 }
 KEY
 
-curl  --silent \
- --request POST "http://$GITEA_HOST:3000/api/v1/user/keys?access_token=$GITEA_USER_TOKEN" \
- --header "content-type: application/json" \
- --data @./key.json
+  curl  --silent \
+  --request POST "http://$GITEA_HOST:3000/api/v1/user/keys?access_token=$GITEA_USER_TOKEN" \
+  --header "content-type: application/json" \
+  --data "@$GITEA_TEMP/key.json"
+}
 
+create_repo() {
+  REPO_NAME="$1"
+  DESCRIPTION="$2"
 
-###### CREATE EMPTY REPOS ###### 
-cat <<-REPO > repo.json
+  [[ -z $REPO_NAME ]] && return 1
+
+  cat <<-REPO > $GITEA_TEMP/$REPO_NAME.json
 {
   "auto_init": false,
-  "description": "Sinatra CI Example",
-  "name": "sintra-example",
+  "description": "$DESCRIPTION",
+  "name": "$REPO_NAME",
   "private": true
 }
 REPO
-
-curl  --silent \
- --request POST "http://$GITEA_HOST:3000/api/v1/user/repos?access_token=$GITEA_USER_TOKEN" \
- --header "accept: application/json" \
- --header "content-type: application/json" \
- --data @./repo.json
-
-cat <<-REPO > repo.json
-{
-  "auto_init": false,
-  "description": "Flask CI Example",
-  "name": "flask-example",
-  "private": true
+  curl  --silent \
+    --request POST "http://$GITEA_HOST:3000/api/v1/user/repos?access_token=$GITEA_USER_TOKEN" \
+    --header "accept: application/json" \
+    --header "content-type: application/json" \
+    --data "@$GITEA_TEMP/$REPO_NAME.json"
 }
-REPO
 
-curl  --silent \
- --request POST "http://$GITEA_HOST:3000/api/v1/user/repos?access_token=$GITEA_USER_TOKEN" \
- --header "accept: application/json" \
- --header "content-type: application/json" \
- --data @./repo.json
+populate_repository() {
+  GIT_URL=$1
+  GITEA_REPO=$2
 
-### POPULATE EMPTY REPOSITORIES
-for REPO in ${REPOS[@]}; do
-  git clone $REPO
-  pushd ${REPO##*/}
+  pushd $GITEA_TEMP
+  git clone $GIT_URL
+
+  # push git repo to empty gitea repo
+  pushd ${GIT_URL##*/}
   git remote rename origin upstream
-  git remote add origin git@$GITEA_HOST:testuser/${REPO##*-}-example.git
+  git remote add origin git@$GITEA_HOST:jenkins/$GITEA_REPO.git
   git push -u origin master
   popd
-  # CLEANUP
-  rm -rf ${REPO##*/}
-done
+  
+  # cleanup
+  rm -rf ${GIT_URL##*/}
+  popd
+}
 
-# CLEANUP
-rm key.json
-rm repo.json
+main

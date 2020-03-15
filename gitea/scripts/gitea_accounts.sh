@@ -8,14 +8,13 @@ create_accounts()
     --password adminuser \
     --admin \
     --email admin@example.com \
-    --must-change-password false || true
+    --must-change-password "false" || true
 
   gitea admin create-user \
-    --name testuser \
-    --password testuser  \
-    --email testuser@example.com \
-    --must-change-password false || true
-    
+    --name jenkins \
+    --password jenkins  \
+    --email jenkins@example.com \
+    --must-change-password "false" || true
 }
 
 ###### SPIN UNTIL SERVICE IS UP

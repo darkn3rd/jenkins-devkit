@@ -34,6 +34,7 @@ services:
       DB_USER: gitea
       DB_PASSWD: gitea
       SECRET_KEY: PCNNFSOuxRrblfbXVY3uMXykGt389gjQBgWZwa3PryspmPeaR1ojGv0XpaKoFSmT
+      SSH_DOMAIN: gitea
     volumes:
       - ./gitea:/data
       - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
@@ -41,7 +42,7 @@ services:
       - ./scripts/gitea_wait_accounts.sh:/usr/local/bin/gitea_wait_accounts.sh
     ports:
       - "3000:3000"
-      - "22:22"
+      - "3222:22"
     depends_on:
       - db
     command:

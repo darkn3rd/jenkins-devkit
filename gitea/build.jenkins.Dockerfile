@@ -25,7 +25,7 @@ USER jenkins
 ###### GENERATE SSH KEY PAIR
 RUN mkdir -p /usr/share/jenkins/ref/.ssh && \
   chmod 700 /usr/share/jenkins/ref/.ssh && \
-  ssh-keygen -t rsa -b 4096 -C "testuser@example.com" -f /usr/share/jenkins/ref/.ssh/id_rsa -q -N ""
+  ssh-keygen -t rsa -b 4096 -C "jenkins@example.com" -f /usr/share/jenkins/ref/.ssh/id_rsa -q -N ""
 
 ####### INSTALL PLUGINS
 COPY ./scripts/jenkins/plugins.txt /usr/share/jenkins/ref/plugins.txt
