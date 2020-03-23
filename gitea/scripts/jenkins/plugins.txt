@@ -39,6 +39,7 @@ favorite
 git
 git-client
 git-server
+gitea
 github
 github-api
 github-branch-source

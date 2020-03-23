@@ -1,24 +1,27 @@
 #!/usr/bin/env bash
 
-create_accounts()
-{
-  ######  CREATE ACCOUNTS ###### 
-  gitea admin create-user \
-    --name adminuser \
-    --password adminuser \
-    --admin \
-    --email admin@example.com \
-    --must-change-password "false" || true
-
-  gitea admin create-user \
-    --name jenkins \
-    --password jenkins  \
-    --email jenkins@example.com \
-    --must-change-password "false" || true
+main() {
+  # delay until service is up
+  /usr/local/bin/wait-for-it.sh localhost:3000 -- echo "Creating accounts..."
+  # create admin user
+  create_demo_account adminuser adminuser true
+  # create non-admin user
+  create_demo_account testuser testuser 
 }
 
-###### SPIN UNTIL SERVICE IS UP
-/usr/local/bin/wait-for-it.sh localhost:3000 -- echo "Creating accounts..."
-create_accounts
+create_demo_account() {
+  USERNAME=$1
+  PASSWORD=$2
+  IS_ADMIN=$3
 
+  [[ -z $USERNAME ]] && return 1
+  [[ -z $PASSWORD ]] && return 1
 
+  OPTIONS="--name $USERNAME --password $PASSWORD"
+  [[ -z $IS_ADMIN ]] || OPTIONS=" $OPTIONS --admin"
+  OPTIONS=" $OPTIONS --email $USERNAME@example.com --must-change-password=false"
+
+  gitea admin create-user $OPTIONS || true
+}
+
+main
